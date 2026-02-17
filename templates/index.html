@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Traffic Predictor Pro</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@300;400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --primary: #f59e0b;
+            --secondary: #ec4899;
+            --accent: #10b981;
+            --dark: #0f172a;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text: #f8fafc;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', sans-serif;
+            background: radial-gradient(circle at top left, #1e1b4b, #0f172a);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3rem;
+            margin: 0;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        h2 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.2rem;
+            margin-top: 0;
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .btn {
+            background: linear-gradient(90deg, var(--secondary), var(--primary));
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: opacity 0.3s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .result-box {
+            display: none;
+            margin-top: 30px;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.9);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .metric {
+            text-align: center;
+            padding: 20px;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 15px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+        }
+
+        .metric-val {
+            font-size: 2.5rem;
+            font-weight: bold;
+            display: block;
+            color: var(--accent);
+        }
+
+        .metric-label {
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            color: #94a3b8;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 60px;
+            color: #64748b;
+            font-size: 0.8rem;
+        }
+
+        #data-preview {
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.8rem;
+            background: #000;
+            padding: 15px;
+            border-radius: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            color: #4ade80;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>Traffic Sentinel AI</h1>
+            <p>Predicting Traffic Flow with Sequential Neural Intelligence</p>
+        </header>
+
+        <div class="dashboard">
+            <div class="card">
+                <h2>Data Engine</h2>
+                <div class="input-group">
+                    <p>Load the last 12 hours of traffic snapshots into the Attention-based Bi-LSTM model.</p>
+                </div>
+                <button class="btn" id="generate-btn">Generate Test Sequence</button>
+                <div style="margin-top: 20px;">
+                    <label>Current Input Buffer:</label>
+                    <div id="data-preview">No data loaded...</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Neural Prediction</h2>
+                <button class="btn" id="predict-btn" style="margin-bottom: 20px;">Execute Forecast</button>
+
+                <div class="result-box" id="result-box">
+                    <div class="metric">
+                        <span class="metric-val" id="reg-val">--</span>
+                        <span class="metric-label">Predicted Vehicle Volume (T+1)</span>
+                    </div>
+                    <div class="metric">
+                        <span class="metric-val" id="cls-val">--</span>
+                        <span class="metric-label">Congestion Status Warning</span>
+                    </div>
+                </div>
+                <div id="loading" style="display:none; text-align: center;">Processing through Sequential Blocks...
+                </div>
+            </div>
+        </div>
+
+        <footer>
+            Built with Sequential Deep Learning (LSTM & Attention) &middot; Powered by Flask
+        </footer>
+    </div>
+
+    <script>
+        let currentSequence = [];
+
+        document.getElementById('generate-btn').onclick = function () {
+            // Mock data generation for demo
+            currentSequence = [];
+            for (let i = 0; i < 12; i++) {
+                currentSequence.push([
+                    Math.random() * 0.8 + 0.1, // CarCount
+                    Math.random() * 0.2,       // BusCount
+                    Math.random() * 0.3,       // TruckCount
+                    Math.random() * 0.1,       // BikeCount
+                    Math.random(),             // Total
+                    Math.sin(2 * Math.PI * i / 24), // Hour Sin
+                    Math.cos(2 * Math.PI * i / 24), // Hour Cos
+                    0.5,                       // DayOfWeek
+                    0                          // IsWeekend
+                ]);
+            }
+            document.getElementById('data-preview').innerText = JSON.stringify(currentSequence[0], null, 2) + "... [11 more steps]";
+        };
+
+        document.getElementById('predict-btn').onclick = async function () {
+            if (currentSequence.length === 0) {
+                alert("Load a sequence first!");
+                return;
+            }
+
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('result-box').style.display = 'none';
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sequence: currentSequence })
+                });
+                const result = await response.json();
+
+                if (result.error) {
+                    alert(result.error);
+                } else {
+                    document.getElementById('reg-val').innerText = Math.round(result.regression_prediction * 200); // Inverse scale mock
+                    document.getElementById('cls-val').innerText = result.congestion_level;
+                    document.getElementById('result-box').style.display = 'block';
+                }
+            } catch (e) {
+                alert("Error: " + e.message + ". Make sure models are trained!");
+            } finally {
+                document.getElementById('loading').style.display = 'none';
+            }
+        };
+    </script>
+</body>
+
+</html>

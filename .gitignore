@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+ENV/
+
+# Data and Models
+data/*.npy
+data/traffic.csv
+models/*.h5
+models/*.pth
+models/*.pkl
+
+# Notebooks
+notebooks/*.png
+
+# System
+.DS_Store
+Thumbs.db
